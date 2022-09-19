@@ -1,7 +1,6 @@
 import multiprocessing
 import sys
 from socket import *
-import time
 import cv2
 import mediapipe as mp
 import serial
@@ -27,7 +26,11 @@ def conn():
 
     return connection
 
+tcp_data = 'tt'
+
 def tcp():
+    global tcp_data
+
     connection = conn()
 
     while True:
@@ -37,18 +40,26 @@ def tcp():
             connection.close()
             break
         else:
-            connection.send('con'.encode('utf-8'))
+            connection.send(tcp_data.encode('utf-8'))
+            print(tcp_data)
+
+sensor_data = 'ss'
 
 def sensor():
+    global sensor_data
+
     arduino = serial.Serial('COM9', 9600)
 
     while True:
         a = arduino.readline()
-        serial_data = a.decode()
-        print(serial_data)
-        time.sleep(0.1)
+        sensor_data = a.decode()
+        # print(serial_data)
+        # sensor_data = serial_data
+        # print(sensor_data)
 
 if __name__ == '__main__':
+    tcp_data = ''
+    sensor_data = ''
     # p1 = multiprocessing.Process(target=conn)
     proc_tcp = multiprocessing.Process(target=tcp)
     proc_sensor = multiprocessing.Process(target=sensor)
@@ -100,6 +111,11 @@ if __name__ == '__main__':
                 connection_drawing_spec=mp_drawing_styles
                 .get_default_hand_connections_style())
             cv2.imshow('MediaPipe Holistic', cv2.flip(image, 1))
+
+            if sensor_data != '':
+                print(sensor_data)
+
+            tcp_data = f'sensor : {sensor_data}'
 
             # print(z1>z2)
             if cv2.waitKey(5) & 0xFF == 27:
